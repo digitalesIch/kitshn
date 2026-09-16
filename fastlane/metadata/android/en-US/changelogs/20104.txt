@@ -1,2 +1,2 @@
-Fixed
+🐛 Fixed
 - Updated sign-in so it keeps working with upcoming Tandoor server versions
