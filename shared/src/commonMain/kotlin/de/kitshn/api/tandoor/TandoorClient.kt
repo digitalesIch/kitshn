@@ -2,6 +2,7 @@ package de.kitshn.api.tandoor
 
 import de.kitshn.api.tandoor.route.TandoorAIImportRoute
 import de.kitshn.api.tandoor.route.TandoorAIProviderRoute
+import de.kitshn.api.tandoor.route.TandoorAllAuthRoute
 import de.kitshn.api.tandoor.route.TandoorCookLogRoute
 import de.kitshn.api.tandoor.route.TandoorFoodRoute
 import de.kitshn.api.tandoor.route.TandoorKeywordRoute
@@ -19,16 +20,12 @@ import de.kitshn.api.tandoor.route.TandoorUnitRoute
 import de.kitshn.api.tandoor.route.TandoorUserPreferenceRoute
 import de.kitshn.api.tandoor.route.TandoorUserRoute
 import de.kitshn.isTlsException
-import de.kitshn.json
 import io.ktor.http.HttpStatusCode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.put
 
 @Serializable
 data class TandoorTimeoutSettings(
@@ -55,7 +52,7 @@ data class TandoorCredentials(
     var username: String = "",
     val password: String = "",
     var token: TandoorCredentialsToken? = null,
-    val cookie: String? = null,
+    var cookie: String? = null,
     val customHeaders: List<TandoorCredentialsCustomHeader> = listOf(),
     val mtlsCertificateAlias: String? = null,
     val mtlsCertificateData: String? = null,
@@ -116,6 +113,7 @@ class TandoorClient(
 
     val aiImport = TandoorAIImportRoute(this)
     val aiProvider = TandoorAIProviderRoute(this)
+    val allAuth = TandoorAllAuthRoute(this)
     val cookLog = TandoorCookLogRoute(this)
     val keyword = TandoorKeywordRoute(this)
     val food = TandoorFoodRoute(this)
@@ -133,25 +131,6 @@ class TandoorClient(
     val userPreference = TandoorUserPreferenceRoute(this)
 
     val serverSettings = TandoorServerSettingsRoute(this)
-
-    suspend fun login(): TandoorCredentialsToken? {
-        val obj = buildJsonObject {
-            put("username", credentials.username)
-            put("password", credentials.password)
-        }
-
-        try {
-            return json.decodeFromJsonElement<TandoorCredentialsToken>(
-                postObject(
-                    "-token-auth/",
-                    obj
-                )
-            )
-        } catch(_: TandoorRequestsError) {
-        }
-
-        return null
-    }
 
     suspend fun testConnection(ignoreAuth: Boolean): Boolean {
         try {

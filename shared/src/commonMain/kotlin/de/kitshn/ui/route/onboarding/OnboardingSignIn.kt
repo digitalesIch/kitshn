@@ -309,8 +309,8 @@ fun RouteOnboardingSignIn(
                     )
 
                     val client = TandoorClient(credentials)
-                    client.login()?.let {
-                        credentials.token = it
+                    client.allAuth.login()?.let {
+                        credentials.cookie = it
 
                         TandoorRequestState().wrapRequest {
                             val user = p.vm.tandoorClient?.user?.get()
