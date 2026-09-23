@@ -40,7 +40,6 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.LocalTime
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.format
 import kotlinx.datetime.format.FormatStringsInDatetimeFormats
 import kotlinx.datetime.format.byUnicodePattern
@@ -296,7 +295,12 @@ fun Boolean.toTFString(): String {
 @OptIn(FormatStringsInDatetimeFormats::class)
 fun String.parseTandoorDate(): LocalDate {
     if(this.length > 14) {
-        return Instant.parse(this).toLocalDateTime(TimeZone.currentSystemDefault()).date
+        // Meal-plan dates are date-only values on the server (web sends yyyy-MM-dd,
+        // server normalizes to midnight UTC). Parse in UTC so the displayed day
+        // matches the stored day in every client timezone (#398, #423).
+        // Parsing in currentSystemDefault() shifted midnight-UTC instants to the
+        // previous evening for negative UTC offsets (e.g. America/Los_Angeles).
+        return Instant.parse(this).toLocalDateTime(TimeZone.UTC).date
     }
 
     // legacy for version < 1.15.18
@@ -308,8 +312,11 @@ fun String.parseIsoTime(): LocalDateTime {
 }
 
 fun LocalDate.toStartOfDayString(): String {
-    return this.atStartOfDayIn(TimeZone.currentSystemDefault())
-        .toLocalDateTime(TimeZone.UTC)
+    // Send UTC midnight for the picked calendar day so the server stores exactly
+    // that day regardless of client timezone (#398, #423).
+    // The old atStartOfDayIn(currentSystemDefault()) shifted the UTC date to the
+    // previous day for positive offsets (e.g. 00:00 CEST = 22:00Z previous day).
+    return LocalDateTime(this, LocalTime(0, 0))
         .format(LocalDateTime.Formats.ISO) + "Z"
 }
 
