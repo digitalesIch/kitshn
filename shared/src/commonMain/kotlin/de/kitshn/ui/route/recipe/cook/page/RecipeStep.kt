@@ -96,18 +96,21 @@ fun RouteRecipeCookPageStep(
             val density = LocalDensity.current
 
             val textMeasurer = rememberTextMeasurer()
-            var fontSize by remember { mutableStateOf(14.sp) }
+            var fontSize by remember { mutableStateOf(16.sp) }
 
             val maxWidthPx = with(density) { maxWidth.roundToPx() }
             LaunchedEffect(step.instruction, sideBySideLayout) {
-                var newFontSize = 18
+                // Auto-grow, but bounded: bodyLarge in the normal recipe view is ~16sp.
+                // The old 18..44sp range rendered Markdown instructions oversized (#421)
+                // and measured raw instruction text while rendering templated Markdown.
+                var newFontSize = 16
 
-                while(newFontSize < 44) {
+                while(newFontSize < 28) {
                     val textLayout = textMeasurer.measure(
                         text = step.instruction,
                         style = TextStyle(
                             fontSize = newFontSize.sp,
-                            lineHeight = newFontSize.sp
+                            lineHeight = (newFontSize + 2).sp
                         ),
                         constraints = Constraints(
                             maxWidth = maxWidthPx
@@ -115,10 +118,12 @@ fun RouteRecipeCookPageStep(
                     )
 
                     if(textLayout.size.height > maxHeightPx) break
-                    newFontSize += 2
+                    newFontSize += 1
                 }
 
-                fontSize = newFontSize.sp
+                // Clamp once more so very short steps can't explode to the cap
+                // when maxHeightPx is generous (e.g. tablets / side-by-side).
+                fontSize = newFontSize.coerceIn(16, 28).sp
             }
 
             Column(
