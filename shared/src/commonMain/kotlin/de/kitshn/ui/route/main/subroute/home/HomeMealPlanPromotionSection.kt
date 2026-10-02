@@ -72,8 +72,7 @@ fun RouteMainSubrouteHomeMealPlanPromotionSection(
                         .plus(day.plus, DateTimeUnit.DAY)
 
                 val filteredMealPlans = it.filter { mealPlan ->
-                    // filter recipes of the promotionDay — compare calendar days
-                    // in UTC so midnight-UTC instants don't shift days (#398, #423)
+                    // compare UTC calendar days (#398, #423)
                     mealPlan.from_date.parseTandoorDate() == promotionDay
                 }.filter { mealPlan ->
                     // filter already cooked recipes

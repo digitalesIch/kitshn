@@ -295,11 +295,7 @@ fun Boolean.toTFString(): String {
 @OptIn(FormatStringsInDatetimeFormats::class)
 fun String.parseTandoorDate(): LocalDate {
     if(this.length > 14) {
-        // Meal-plan dates are date-only values on the server (web sends yyyy-MM-dd,
-        // server normalizes to midnight UTC). Parse in UTC so the displayed day
-        // matches the stored day in every client timezone (#398, #423).
-        // Parsing in currentSystemDefault() shifted midnight-UTC instants to the
-        // previous evening for negative UTC offsets (e.g. America/Los_Angeles).
+        // Meal-plan dates are UTC calendar days (#398, #423).
         return Instant.parse(this).toLocalDateTime(TimeZone.UTC).date
     }
 
@@ -312,10 +308,7 @@ fun String.parseIsoTime(): LocalDateTime {
 }
 
 fun LocalDate.toStartOfDayString(): String {
-    // Send UTC midnight for the picked calendar day so the server stores exactly
-    // that day regardless of client timezone (#398, #423).
-    // The old atStartOfDayIn(currentSystemDefault()) shifted the UTC date to the
-    // previous day for positive offsets (e.g. 00:00 CEST = 22:00Z previous day).
+    // Send UTC midnight so the stored day matches the picked day (#398, #423).
     return LocalDateTime(this, LocalTime(0, 0))
         .format(LocalDateTime.Formats.ISO) + "Z"
 }
