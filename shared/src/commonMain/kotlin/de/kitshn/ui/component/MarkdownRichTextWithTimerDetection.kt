@@ -116,9 +116,6 @@ fun MarkdownRichTextWithTimerDetection(
             }
         }
 
-        // Headings would otherwise stay at M3 defaults and look gigantic
-        // next to a scaled body (e.g. cooking mode, #421). Derive them
-        // from the requested fontSize so the visual hierarchy is preserved.
         val titleLargeBase = MaterialTheme.typography.titleLarge
         fun scaledHeading(factor: Float) = titleLargeBase.run {
             if(fontSize.isSpecified && fontSize.isSp) {

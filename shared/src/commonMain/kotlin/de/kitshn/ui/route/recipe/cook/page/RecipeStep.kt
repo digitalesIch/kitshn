@@ -65,6 +65,9 @@ import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import kotlin.math.roundToInt
 
+private const val COOK_MIN_FONT_SP = 16
+private const val COOK_MAX_FONT_SP = 28
+
 @Composable
 fun RouteRecipeCookPageStep(
     topPadding: Dp,
@@ -96,21 +99,18 @@ fun RouteRecipeCookPageStep(
             val density = LocalDensity.current
 
             val textMeasurer = rememberTextMeasurer()
-            var fontSize by remember { mutableStateOf(16.sp) }
+            var fontSize by remember { mutableStateOf(COOK_MIN_FONT_SP.sp) }
 
             val maxWidthPx = with(density) { maxWidth.roundToPx() }
             LaunchedEffect(step.instruction, sideBySideLayout) {
-                // Auto-grow, but bounded: bodyLarge in the normal recipe view is ~16sp.
-                // The old 18..44sp range rendered Markdown instructions oversized (#421)
-                // and measured raw instruction text while rendering templated Markdown.
-                var newFontSize = 16
+                var newFontSize = COOK_MIN_FONT_SP
 
-                while(newFontSize < 28) {
+                while(newFontSize < COOK_MAX_FONT_SP) {
                     val textLayout = textMeasurer.measure(
                         text = step.instruction,
                         style = TextStyle(
                             fontSize = newFontSize.sp,
-                            lineHeight = (newFontSize + 2).sp
+                            lineHeight = newFontSize.sp
                         ),
                         constraints = Constraints(
                             maxWidth = maxWidthPx
@@ -121,9 +121,7 @@ fun RouteRecipeCookPageStep(
                     newFontSize += 1
                 }
 
-                // Clamp once more so very short steps can't explode to the cap
-                // when maxHeightPx is generous (e.g. tablets / side-by-side).
-                fontSize = newFontSize.coerceIn(16, 28).sp
+                fontSize = newFontSize.coerceIn(COOK_MIN_FONT_SP, COOK_MAX_FONT_SP).sp
             }
 
             Column(
